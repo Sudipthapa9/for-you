@@ -661,17 +661,34 @@ async function logToSupabase(choice) {
   const isMobile = /Mobi|Android|iPhone|iPad/.test(ua);
   const device = /iPad|Tablet/.test(ua) ? 'Tablet' : isMobile ? 'Mobile' : 'Desktop';
   try {
-    await fetch(`${SUPA_URL}/rest/v1/responses`, {
+    const response = await fetch(`${SUPA_URL}/rest/v1/responses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ choice, browser, os, device, screen: `${screen.width}×${screen.height}`, language: navigator.language || 'Unknown', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unknown', timestamp: new Date().toISOString() })
     });
-  } catch(e) {}
+    if (!response.ok) {
+      const error = await response.text();
+      console.error(`Supabase error (${response.status}):`, error);
+    }
+  } catch(e) {
+    console.error('Supabase fetch failed:', e);
+  }
 }
 
 const LOCK_KEY = 'confession_locked_v1';
 let currentPage = 'page-confession';
 const YES_FLOW = ['page-sorry','page-day-1','page-day-2','page-day-3','page-day-4','page-day-5','page-day-6','page-picture-sorry','page-album'];
+
+const PL = ['🌸','🌹','✿','❀','🌷','❁'];
+function spawnPetals() {
+  const c = document.getElementById('petals'); c.innerHTML = '';
+  for (let i = 0; i < 18; i++) { const p = document.createElement('div'); p.className = 'petal'; p.textContent = PL[Math.floor(Math.random()*PL.length)]; p.style.left=(Math.random()*100)+'%'; p.style.animationDuration=(8+Math.random()*10)+'s'; p.style.animationDelay=(Math.random()*12)+'s'; p.style.fontSize=(14+Math.random()*18)+'px'; c.appendChild(p); }
+}
+function burstPetals() {
+  const c = document.getElementById('petals'); c.innerHTML = '';
+  for (let i = 0; i < 30; i++) { const p = document.createElement('div'); p.className = 'petal'; p.textContent = PL[Math.floor(Math.random()*PL.length)]; p.style.left=(Math.random()*100)+'%'; p.style.animationDuration=(4+Math.random()*6)+'s'; p.style.animationDelay=(Math.random()*3)+'s'; p.style.fontSize=(16+Math.random()*20)+'px'; c.appendChild(p); }
+  setTimeout(() => { c.innerHTML = ''; }, 9000);
+}
 
 (function init() {
   const saved = localStorage.getItem(LOCK_KEY);
@@ -710,17 +727,6 @@ async function handleNo() {
   showPage('page-locked');
 }
 function disableNo() { const b = document.getElementById('btn-no'); if (b) { b.disabled = true; b.style.display = 'none'; } }
-
-const PL = ['🌸','🌹','✿','❀','🌷','❁'];
-function spawnPetals() {
-  const c = document.getElementById('petals'); c.innerHTML = '';
-  for (let i = 0; i < 18; i++) { const p = document.createElement('div'); p.className = 'petal'; p.textContent = PL[Math.floor(Math.random()*PL.length)]; p.style.left=(Math.random()*100)+'%'; p.style.animationDuration=(8+Math.random()*10)+'s'; p.style.animationDelay=(Math.random()*12)+'s'; p.style.fontSize=(14+Math.random()*18)+'px'; c.appendChild(p); }
-}
-function burstPetals() {
-  const c = document.getElementById('petals'); c.innerHTML = '';
-  for (let i = 0; i < 30; i++) { const p = document.createElement('div'); p.className = 'petal'; p.textContent = PL[Math.floor(Math.random()*PL.length)]; p.style.left=(Math.random()*100)+'%'; p.style.animationDuration=(4+Math.random()*6)+'s'; p.style.animationDelay=(Math.random()*3)+'s'; p.style.fontSize=(16+Math.random()*20)+'px'; c.appendChild(p); }
-  setTimeout(() => { c.innerHTML = ''; }, 9000);
-}
 </script>
 </body>
 </html>
