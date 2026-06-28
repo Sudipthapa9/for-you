@@ -664,7 +664,7 @@ async function logToSupabase(choice) {
     const response = await fetch(`${SUPA_URL}/rest/v1/responses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ choice, browser, os, device, screen: `${screen.width}×${screen.height}`, language: navigator.language || 'Unknown', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unknown', timestamp: new Date().toISOString() })
+      body: JSON.stringify({ choice, browser, os, device, language: navigator.language || 'Unknown', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unknown', timestamp: new Date().toISOString() })
     });
     if (!response.ok) {
       const error = await response.text();
