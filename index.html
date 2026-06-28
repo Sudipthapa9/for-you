@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&family=Dancing+Script:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --rose:    #c8768a;
+    --rose-lt: #f5e6ea;
+    --rose-dk: #8b3d52;
+    --blush:   #fdf0f3;
+    --cream:   #fdf8f5;
+    --gold:    #c9a96e;
+    --text:    #2d1a20;
+    --muted:   #7a5560;
+    --white:   #ffffff;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Jost', sans-serif; background: var(--cream); color: var(--text); overflow-x: hidden; }
+
+  .page { display: none; min-height: 100vh; animation: fadeIn 0.9s ease both; }
+  .page.active { display: flex; flex-direction: column; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  @keyframes petalFall {
+    0%   { transform: translateY(-60px) rotate(0deg); opacity: 0; }
+    10%  { opacity: 0.9; }
+    100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+  }
+  @keyframes heartPulse {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.12); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+  }
+
+  .petals { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+  .petal { position: absolute; top: -60px; font-size: 18px; animation: petalFall linear infinite; opacity: 0; user-select: none; }
+
+  /* ══ CONFESSION ══ */
+  #page-confession {
+    background: linear-gradient(160deg, #fdf0f3 0%, #fdf8f5 60%, #f5e6ea 100%);
+    align-items: center; justify-content: center;
+    position: relative; padding: 60px 24px;
+  }
+  .confession-inner { max-width: 720px; width: 100%; position: relative; z-index: 1; }
+  .confession-inner::before, .confession-inner::after {
+    content: '🌹'; position: absolute; font-size: 28px; opacity: 0.4;
+    animation: float 4s ease-in-out infinite;
+  }
+  .confession-inner::before { top: -10px; left: -10px; }
+  .confession-inner::after  { top: -10px; right: -10px; animation-delay: 1.5s; }
+
+  .eyebrow { font-size: 10px; letter-spacing: 5px; text-transform: uppercase; color: var(--rose); margin-bottom: 20px; font-weight: 500; text-align: center; }
+
+  .confession-inner h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(38px, 6vw, 64px); font-weight: 300; line-height: 1.1;
+    color: var(--text); margin-bottom: 36px; text-align: center;
+  }
+  .confession-inner h1 em { font-style: italic; color: var(--rose-dk); }
+
+  /* ── Letter ── */
+  .letter-wrap {
+    position: relative; background: var(--white);
+    border: 1px solid #e8c8d0; border-radius: 20px;
+    padding: 52px 52px 44px; margin-bottom: 36px;
+    box-shadow: 0 2px 0 #ecc8d2, 0 4px 0 #f0d0d8, 0 8px 32px rgba(200,118,138,0.1);
+    text-align: left;
+  }
+  .letter-wrap::before {
+    content: ''; position: absolute; inset: 0; border-radius: 20px;
+    background-image: repeating-linear-gradient(transparent, transparent 31px, rgba(200,118,138,0.06) 31px, rgba(200,118,138,0.06) 32px);
+    pointer-events: none;
+  }
+  .letter-wrap .open-quote {
+    font-family: 'Cormorant Garamond', serif; font-size: 120px; line-height: 0.6;
+    color: #f0d0d8; display: block; margin-bottom: 16px; margin-left: -8px; font-weight: 300;
+  }
+  .letter-salutation { font-family: 'Dancing Script', cursive; font-size: 28px; color: var(--rose-dk); margin-bottom: 20px; display: block; }
+  .letter-body { font-family: 'Cormorant Garamond', serif; font-size: 19px; line-height: 1.9; color: var(--text); font-weight: 300; position: relative; z-index: 1; }
+  .letter-body p { margin-bottom: 18px; }
+  .letter-body p:last-child { margin-bottom: 0; }
+  .letter-body .highlight { font-style: italic; color: var(--rose-dk); font-weight: 400; }
+  .letter-body .nepali {
+    font-style: italic; color: var(--muted); border-left: 2px solid #e8c0cc;
+    padding-left: 14px; margin: 20px 0; display: block; font-size: 18px; line-height: 1.95;
+  }
+  .letter-sorry-repeat {
+    font-family: 'Dancing Script', cursive; font-size: 22px; color: var(--rose);
+    display: block; margin: 20px 0; letter-spacing: 2px; text-align: center; opacity: 0.8;
+  }
+  .letter-closing { margin-top: 32px; padding-top: 24px; border-top: 1px solid #f0d8de; }
+  .letter-closing .close-line { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--muted); font-style: italic; display: block; margin-bottom: 12px; }
+  .letter-closing .signature { font-family: 'Dancing Script', cursive; font-size: 32px; color: var(--rose-dk); display: block; margin-top: 8px; }
+  .letter-wrap .close-quote {
+    font-family: 'Cormorant Garamond', serif; font-size: 120px; line-height: 0.2;
+    color: #f0d0d8; display: block; text-align: right; margin-right: -8px; font-weight: 300; margin-top: 8px;
+  }
+  .letter-divider { text-align: center; margin: 20px 0; color: #e0b0be; letter-spacing: 8px; font-size: 14px; }
+
+  .warning-note {
+    font-size: 12px; color: var(--muted); margin-bottom: 28px; font-style: italic; letter-spacing: 0.3px;
+    display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center;
+  }
+  .warning-note::before, .warning-note::after { content: '—'; color: #c8768a; }
+
+  .btn-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    padding: 16px 40px; border-radius: 50px; font-family: 'Jost', sans-serif;
+    font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; border: none; font-weight: 500; transition: all 0.3s ease;
+  }
+  .btn-yes { background: var(--rose); color: var(--white); box-shadow: 0 6px 28px rgba(200,118,138,0.35); }
+  .btn-yes:hover { background: var(--rose-dk); transform: translateY(-2px); box-shadow: 0 10px 36px rgba(200,118,138,0.45); }
+  .btn-no { background: transparent; color: var(--muted); border: 1px solid #d4a8b4; }
+  .btn-no:hover { background: #f5e6ea; color: var(--rose-dk); }
+  .btn-no:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+  /* ══ LOCKED ══ */
+  #page-locked { background: #1a0d10; align-items: center; justify-content: center; text-align: center; padding: 60px 24px; }
+  .locked-inner { max-width: 520px; }
+  .lock-icon { font-size: 64px; margin-bottom: 32px; }
+  .locked-inner h2 { font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 300; color: #c9a0aa; margin-bottom: 24px; line-height: 1.2; }
+  .locked-inner p { color: #6b4a55; font-size: 16px; line-height: 1.85; font-family: 'Cormorant Garamond', serif; font-style: italic; }
+
+  /* ══ SORRY ══ */
+  #page-sorry { background: var(--blush); align-items: center; justify-content: center; text-align: center; padding: 80px 24px; position: relative; min-height: 100vh; }
+  .sorry-inner { max-width: 660px; position: relative; z-index: 1; }
+  .heart-big { font-size: 72px; animation: heartPulse 2.2s ease-in-out infinite; display: block; margin: 0 auto 32px; }
+  .sorry-inner h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(38px, 6vw, 64px); font-weight: 300; color: var(--rose-dk); margin-bottom: 24px; line-height: 1.15; }
+  .sorry-inner h2 em { font-style: italic; }
+  .sorry-message { font-family: 'Cormorant Garamond', serif; font-size: 20px; line-height: 1.75; color: var(--muted); margin-bottom: 48px; font-weight: 300; font-style: italic; padding: 0 16px; }
+  .btn-next { padding: 16px 48px; border-radius: 50px; background: var(--rose); color: var(--white); border: none; font-family: 'Jost', sans-serif; font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase; cursor: pointer; font-weight: 500; box-shadow: 0 6px 24px rgba(200,118,138,0.3); transition: all 0.3s ease; }
+  .btn-next:hover { background: var(--rose-dk); transform: translateY(-2px); }
+
+  /* ══ DAY PAGES ══ */
+  .day-page { background: var(--cream); align-items: stretch; min-height: 100vh; }
+  .day-layout { display: flex; min-height: 100vh; }
+  .day-sidebar { width: 280px; min-width: 280px; background: linear-gradient(180deg, #f5e6ea 0%, #fdf0f3 100%); display: flex; flex-direction: column; justify-content: center; padding: 60px 48px; position: sticky; top: 0; height: 100vh; }
+  .day-num { font-family: 'Cormorant Garamond', serif; font-size: 110px; font-weight: 300; color: #e8c0cc; line-height: 1; margin-bottom: 8px; }
+  .day-label { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--rose); font-weight: 500; }
+  .day-name { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--rose-dk); margin-top: 12px; font-weight: 300; }
+  .day-content { flex: 1; padding: 80px 64px; display: flex; flex-direction: column; justify-content: center; }
+  .day-content .thought-label { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); margin-bottom: 28px; font-weight: 500; }
+  .day-content h3 { font-family: 'Cormorant Garamond', serif; font-size: clamp(28px, 4vw, 44px); font-weight: 300; color: var(--text); margin-bottom: 28px; line-height: 1.25; }
+  .day-content .day-text {
+    font-family: 'Cormorant Garamond', serif; font-size: 19px; line-height: 1.9;
+    color: var(--muted); font-weight: 300; max-width: 580px; margin-bottom: 48px;
+  }
+  .day-text .eng { font-style: italic; display: block; margin-bottom: 20px; }
+  .day-text .nep {
+    font-style: normal; display: block; color: var(--text);
+    border-left: 2px solid #e8c0cc; padding-left: 16px;
+    font-size: 18px; line-height: 1.95;
+  }
+  .day-text .sign { font-family: 'Dancing Script', cursive; font-size: 20px; color: var(--rose-dk); display: block; margin-top: 16px; }
+  .divider-rose { width: 60px; height: 1px; background: var(--rose); margin: 32px 0; opacity: 0.5; }
+
+  /* ══ PICTURE SORRY ══ */
+  #page-picture-sorry { background: var(--blush); align-items: center; justify-content: center; text-align: center; padding: 80px 24px; }
+  .pic-sorry-inner { max-width: 720px; }
+  .pic-sorry-inner .eyebrow { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--rose); margin-bottom: 32px; font-weight: 500; }
+  .pic-sorry-inner h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(32px, 5vw, 56px); font-weight: 300; color: var(--text); margin-bottom: 20px; line-height: 1.2; }
+  .pic-sorry-inner .subtitle { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--muted); font-style: italic; font-weight: 300; margin-bottom: 48px; line-height: 1.6; }
+  .photo-grid-single { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 48px; }
+  .photo-slot {
+    aspect-ratio: 1; border-radius: 12px; min-height: 280px;
+    background: linear-gradient(135deg, #f5e0e5, #fae8ee);
+    border: 1px solid #ecc8d2; display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: #d4a0b0; position: relative; overflow: hidden;
+  }
+  .photo-slot img { width: 100%; height: 100%; object-fit: cover; border-radius: 11px; position: absolute; inset: 0; display: block; }
+  .photo-slot .slot-fallback { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .photo-slot .slot-label { font-size: 10px; color: #c8869a; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* ══ ALBUM ══ */
+  #page-album { background: var(--cream); padding: 80px 40px; align-items: center; }
+  .album-inner { max-width: 900px; width: 100%; margin: 0 auto; }
+  .album-header { text-align: center; margin-bottom: 64px; }
+  .album-header .eyebrow { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); margin-bottom: 20px; font-weight: 500; }
+  .album-header h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(36px, 5vw, 60px); font-weight: 300; color: var(--text); line-height: 1.15; margin-bottom: 16px; }
+  .album-header h2 em { font-style: italic; color: var(--rose-dk); }
+  .album-header p { font-family: 'Cormorant Garamond', serif; font-size: 19px; color: var(--muted); font-style: italic; font-weight: 300; }
+  .album-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 280px; gap: 14px; margin-bottom: 48px; }
+  .album-photo { border-radius: 12px; overflow: hidden; border: 1px solid #e8c8d0; background: linear-gradient(135deg, #f5e0e5, #fdf0f3); position: relative; }
+  .album-photo.tall { grid-row: span 2; }
+  .album-photo.wide { grid-column: span 2; }
+  .album-photo .inner { width: 100%; height: 100%; min-height: 160px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; padding: 20px; }
+  .album-photo img { width: 100%; height: 100%; object-fit: cover; display: block; position: absolute; inset: 0; z-index: 1; }
+  .album-photo .mem-icon { font-size: 32px; color: #d4a0b0; }
+  .album-photo .mem-label { font-size: 11px; color: #c8869a; letter-spacing: 1.5px; text-transform: uppercase; }
+  .album-caption { text-align: center; font-family: 'Cormorant Garamond', serif; font-size: 20px; font-style: italic; color: var(--muted); font-weight: 300; line-height: 1.6; margin-bottom: 56px; }
+  .album-final { text-align: center; padding: 48px; background: linear-gradient(135deg, #fdf0f3, #fff5f7); border-radius: 20px; border: 1px solid #ecc8d2; }
+  .album-final .rose-row { font-size: 32px; margin-bottom: 24px; letter-spacing: 8px; }
+  .album-final h3 { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 300; color: var(--rose-dk); margin-bottom: 16px; line-height: 1.3; }
+  .album-final h3 em { font-style: italic; }
+  .album-final p { font-family: 'Cormorant Garamond', serif; font-size: 18px; line-height: 1.75; color: var(--muted); font-style: italic; font-weight: 300; max-width: 500px; margin: 0 auto; }
+
+  /* ══ FINAL LETTER ══ */
+  .final-letter {
+    position: relative; text-align: left;
+    background: var(--white); border: 1px solid #e8c8d0;
+    border-radius: 16px; padding: 44px 48px 36px;
+    margin-top: 36px;
+    box-shadow: 0 2px 0 #ecc8d2, 0 4px 0 #f0d0d8, 0 8px 24px rgba(200,118,138,0.08);
+  }
+  .final-letter::before {
+    content: ''; position: absolute; inset: 0; border-radius: 16px;
+    background-image: repeating-linear-gradient(transparent, transparent 31px, rgba(200,118,138,0.05) 31px, rgba(200,118,138,0.05) 32px);
+    pointer-events: none;
+  }
+  .final-open-quote {
+    font-family: 'Cormorant Garamond', serif; font-size: 100px; line-height: 0.6;
+    color: #f0d0d8; display: block; margin-bottom: 12px; margin-left: -6px; font-weight: 300;
+  }
+  .final-close-quote {
+    font-family: 'Cormorant Garamond', serif; font-size: 100px; line-height: 0.2;
+    color: #f0d0d8; display: block; text-align: right; margin-right: -6px; font-weight: 300; margin-top: 12px;
+  }
+  .final-line {
+    font-family: 'Cormorant Garamond', serif; font-size: 20px; line-height: 1.7;
+    color: var(--text); font-weight: 300; margin-bottom: 10px; position: relative; z-index: 1;
+  }
+  .final-nep {
+    font-family: 'Cormorant Garamond', serif; font-size: 18px; line-height: 1.95;
+    color: var(--muted); font-style: italic; font-weight: 300;
+    border-left: 2px solid #e8c0cc; padding-left: 16px;
+    margin: 4px 0 0 0; position: relative; z-index: 1;
+  }
+  .final-highlight { color: var(--rose-dk); font-style: italic; font-weight: 400; }
+  .final-divider { text-align: center; margin: 22px 0; color: #e0b0be; letter-spacing: 8px; font-size: 14px; position: relative; z-index: 1; }
+  .final-hope {
+    font-family: 'Cormorant Garamond', serif; font-size: 22px; line-height: 1.7;
+    color: var(--rose-dk); font-style: italic; font-weight: 400;
+    text-align: center; margin: 8px 0 20px; position: relative; z-index: 1;
+  }
+  .final-promise {
+    font-family: 'Dancing Script', cursive; font-size: 24px; line-height: 1.7;
+    color: var(--rose-dk); text-align: center; margin-bottom: 8px; position: relative; z-index: 1;
+  }
+  .final-signature {
+    font-family: 'Dancing Script', cursive; font-size: 32px; color: var(--rose-dk);
+    display: block; margin-top: 20px; padding-top: 16px;
+    border-top: 1px solid #f0d8de; position: relative; z-index: 1;
+  }
+
+  /* ══ PROGRESS ══ */
+  .progress { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 100; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #e8c0cc; transition: all 0.3s; cursor: pointer; }
+  .dot.active { background: var(--rose); width: 22px; border-radius: 3px; }
+  .progress.hidden { display: none; }
+
+  @media (max-width: 700px) {
+    .letter-wrap { padding: 36px 28px 32px; }
+    .letter-wrap .open-quote, .letter-wrap .close-quote { font-size: 80px; }
+    .day-layout { flex-direction: column; }
+    .day-sidebar { width: 100%; height: auto; position: static; padding: 48px 32px 32px; }
+    .day-num { font-size: 64px; }
+    .day-content { padding: 40px 32px 64px; }
+    .album-grid { grid-template-columns: repeat(2, 1fr); }
+    .album-photo.tall { grid-row: span 1; }
+    .album-photo.wide { grid-column: span 1; }
+    .photo-grid-single { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="petals" id="petals"></div>
+
+<nav class="progress hidden" id="progress">
+  <div class="dot" onclick="jumpTo(0)"></div>
+  <div class="dot" onclick="jumpTo(1)"></div>
+  <div class="dot" onclick="jumpTo(2)"></div>
+  <div class="dot" onclick="jumpTo(3)"></div>
+  <div class="dot" onclick="jumpTo(4)"></div>
+  <div class="dot" onclick="jumpTo(5)"></div>
+  <div class="dot" onclick="jumpTo(6)"></div>
+  <div class="dot" onclick="jumpTo(7)"></div>
+  <div class="dot" onclick="jumpTo(8)"></div>
+</nav>
+
+<!-- ══════════════════════════════════════ -->
+<!-- CONFESSION                             -->
+<!-- ══════════════════════════════════════ -->
+<section class="page active" id="page-confession">
+  <div class="confession-inner">
+    <p class="eyebrow">A letter, just for you</p>
+    <h1>There is something I<br><em>need to tell you</em></h1>
+
+    <div class="letter-wrap">
+      <span class="open-quote">"</span>
+      <span class="letter-salutation">Hi, Miss Angry Bird 🐦‍🔥</span>
+
+      <div class="letter-body">
+        <p>I just wanted to say that <span class="highlight">I am sorry for everything.</span> I know I hurt you and I regret it deeply. I genuinely felt this time it was my big, big mistake — and I am confessing it. I should not have been like this. I should have been more careful, more responsible.</p>
+
+        <p>I know I am not perfect. But <span class="highlight">I will try to be better for you.</span> A better person. A better friend. A better everything — for you.</p>
+
+        <div class="letter-divider">✦ ✦ ✦</div>
+
+        <span class="nepali">
+          Ava chai nepali maa lekhchu — yo insta maa lekhyo vani dherai option hudaina.<br><br>
+          Tala 2 ota button xa — either yes, either no. I will know which one is pressed by you.<br><br>
+          If yes — I will mark this as sorry accepted. Yedi no vani — I would not try to message. I will think you wanted freedom from this kiddo, and got one. Will always value your decision.<br><br>
+          If yes — I would love to ask for forgiveness. Ik I am a child, baccha jastai chu hai, k k garchu garxu, hera na…<br><br>
+          Kei nei haina — dekhaudaina hola — tara mero motivation nei ta timi hau. Life maa mero nirjal sa ramro sa beya garnu parxa, usko family lai ni sanghai lera janu parxa, maya garnu parxa, safal bannu parxa, sabh lai afhno success dekhaunnu parxa timi sanghai.<br><br>
+          Thulo manxeya bannu parxa. Hajur bidesh janus na — hajur lai kaileya rokdina. Malai time dinus, 1 barsha man ko garna dinus. Hajur janu vaya si sakdai sakina vani ma ni auxu. Paxi paxi ka nei janu xa ra — malai kai janai xaina. K always wants to be your Dada — nothing more.<br><br>
+          Kei xainna ma sa — timi bayak kei hunu ni pareya xina. Timi vaya pugxa. Your feelings are something that keeps me motivated — always. Ma dekhaudina hola, hajur lai lagxa hola vetna mandaina — tyo hajur ko ra mero missunderstanding ho. Mero vetnu timi nei ta xau — timi bayak ko sa vetnu time na mileya ho. Milauna try gardai xu. Hunxa kei na kei ta timi nei ta ho mero.<br><br>
+          Lets not give up. I feel complete when you are with me. You are more than I could ever pray for. I really value you — will make sure to always value you. Will make sure to take your anger with my calm heart.<br><br>
+          I'll be the calmest person you will ever see. Timi ramri — mero lagi ta sabh thok xau. Aru josto na dekhaya ni timi nei ho mero. Timi baya aru na hos, Ava. No nei raixa vani chai… khaii…
+        </span>
+
+        <p>Tara <span class="highlight">promise garchu</span> — maya chai timilai nai garchu vaneyra. Asti ko lagi very sorry. I cherish every moment with you. The main thing is <span class="highlight">I love you, and I will always love you.</span> I will always be there for you — there is no "if" or "but."</p>
+
+        <p>The moments I've spent with you are the most precious things I have, and they always will be. I am writing this from my pure heart.</p>
+
+        <div class="letter-divider">🌹 🌸 🌹</div>
+
+        <p>6 days, no messages. Kati garo cha — okhoo. K vannu — rish ta kati ramro hai. Jati ramro rish vaya ni, <span class="highlight">ava bolidinu pareyo.</span> Khutta dhoknu parcha ki k garnu parcha — ma garaula ni. K cha ra.</p>
+
+        <p>Tara <span class="highlight">hajur chai bolidinu pareyo, mero prabhu.</span> Hajur ta mero yeti ramro payro baccha ho ni, k vannu. Hajur bina ta kei vannai, garnai, sochnai sakdina. <span class="highlight">Hajur ta mero last and final hope ho.</span></p>
+
+        <p>Aba ta hajur leya — j vaneya ni, jaso vaneya ni — chitta dhukhaunna. Naramro kura gardini tah, ali kam vandinu, <span class="highlight">maya gardinu.</span> Aru ta kei vannu xina.</p>
+
+        <p style="font-style:italic; color: var(--rose-dk); font-size: 20px; line-height: 1.7;">You are my everything. You are the best for me. You are 100000000000/100. I see no one besides my parents — <span class="highlight">you are the only one.</span></p>
+
+        <span class="letter-sorry-repeat">sorry · sorry · sorry · sorry · sorry · sorry · sorry</span>
+
+        <p>Kasari padhchau yeti dherai message? Padha hai Ava. <span class="highlight">No thicheyu vani</span> — got nothing to say. Will keep everything aside. And if you feel happy without me, <span class="highlight">I'll be happy for you</span> and wish you well :)</p>
+
+        <p>At last — yo page maa chai yeti nai. Yes thicheyu vani ni kei xa, no thicheyu vani ni kei xa.</p>
+
+        <p><span class="highlight">I've loved you. I will always love you.</span></p>
+      </div>
+
+      <div class="letter-closing">
+        <span class="close-line">With my whole heart,</span>
+        <span class="signature">Dada 🌹</span>
+      </div>
+      <span class="close-quote">"</span>
+    </div>
+
+    <p class="warning-note">This is a one-time moment. Once you choose, this cannot be undone.</p>
+    <div class="btn-row">
+      <button class="btn btn-yes" onclick="handleYes()">Yes ♥</button>
+      <button class="btn btn-no" id="btn-no" onclick="handleNo()">No, thank you</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- LOCKED                                 -->
+<!-- ══════════════════════════════════════ -->
+<section class="page" id="page-locked">
+  <div class="locked-inner">
+    <div class="lock-icon">🔒</div>
+    <h2>This chapter<br>is closed.</h2>
+    <p>
+      Ava — runi bayak option xaina hola ta ni hai, haha. Thikai xa.<br><br>
+      Thank you for everything. Khai k vannu — kei tipnai sakeya xina. Yo click gareya raixa vani thikai xa. Maileya kei lekhna ra vanna sakina.<br><br>
+      Sorry — no words from my side. Kei lekhnu nei xa vani lekhnu hola hai, message maa. Ani ta yestai xa.<br><br>
+      Bye, Ava. Take care always. 🌸
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- SORRY                                  -->
+<!-- ══════════════════════════════════════ -->
+<section class="page" id="page-sorry">
+  <div class="sorry-inner">
+    <span class="heart-big">🌹</span>
+    <h2>First, I need<br>to say <em>I'm sorry.</em></h2>
+    <p class="sorry-message">
+      "I'm sorry for every moment I made you feel unseen. For every time I chose silence when I should have chosen you. You deserved better, and I want to be better — for you."
+    </p>
+    <button class="btn-next" onclick="goToPage('page-day-1')">Continue reading →</button>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- DAY 1 — Tuesday                        -->
+<!-- ══════════════════════════════════════ -->
+<section class="page day-page" id="page-day-1">
+  <div class="day-layout">
+    <div class="day-sidebar">
+      <div class="day-num">01</div>
+      <div class="day-label">Day one</div>
+      <div class="day-name">Tuesday</div>
+    </div>
+    <div class="day-content">
+      <p class="thought-label">A thought from Tuesday</p>
+      <h3>The day we fought —<br>and I missed you by evening.</h3>
+      <div class="divider-rose"></div>
+      <div class="day-text">
+        <span class="eng">I'd think of you — the way you laugh when something genuinely surprises you — and somehow everything softened. You are the reason any day feels worth beginning.</span>
+        <span class="nep">More likely vetya ra fight pareya din hai mero payro manxeya — sorry ya sa ayau vani ta padhxau Ava. Bolxeyu jasto lageya theyo tara nothing happened. Day passed.</span>
+        <span class="sign">— Dada</span>
+      </div>
+      <button class="btn-next" onclick="goToPage('page-day-2')">Next day →</button>
+    </div>
+  </div>
+</section>
+
+<!-- DAY 2 — Wednesday -->
+<section class="page day-page" id="page-day-2">
+  <div class="day-layout">
+    <div class="day-sidebar">
+      <div class="day-num">02</div>
+      <div class="day-label">Day two</div>
+      <div class="day-name">Wednesday</div>
+    </div>
+    <div class="day-content">
+      <p class="thought-label">A thought from Wednesday</p>
+      <h3>I catch myself not smiling.<br>It's you — your absence.</h3>
+      <div class="divider-rose"></div>
+      <div class="day-text">
+        <span class="eng">Something small kept reminding me of you. A song, a colour, the way light falls through a window. For a moment everything else stopped mattering.</span>
+        <span class="nep">Kam maa gaya, kam bata aya — kei garna man lageya na. Padhna khojeya, try gareya, sakina. Ani hamro purano moments ko sabhai photo haru herya. Na sutya — dherai din vayara hola nidaya xu. Bolxau vanni lageya theyo. Day passed.</span>
+        <span class="sign">— Dada</span>
+      </div>
+      <button class="btn-next" onclick="goToPage('page-day-3')">Next day →</button>
+    </div>
+  </div>
+</section>
+
+<!-- DAY 3 — Thursday -->
+<section class="page day-page" id="page-day-3">
+  <div class="day-layout">
+    <div class="day-sidebar">
+      <div class="day-num">03</div>
+      <div class="day-label">Day three</div>
+      <div class="day-name">Thursday</div>
+    </div>
+    <div class="day-content">
+      <p class="thought-label">A thought from Thursday</p>
+      <h3>Ekadashi — I kept your<br>name in my heart all night.</h3>
+      <div class="divider-rose"></div>
+      <div class="day-text">
+        <span class="eng">You've become something that lives quietly inside my days. The kind of presence that makes ordinary life feel like it holds something extraordinary.</span>
+        <span class="nep">Garo vayo. Thursday bata ta mood khasai theya na — friday puja theyo ni ta vai ko gharma. Help gari beluka. "Aja ta bolxin hola" — maya garni manxeya jasto lageya theyo tara kasaiko moun bartha tuteya na hai. Tyo din tha xa — timro nam ko ekadashi raixa, nirjala ekadashi. Ani tyo din rati nindra nai lageya na — 2 bajeya sa tetikai baseya, kei na gari totally gone.</span>
+        <span class="sign">— Dada</span>
+      </div>
+      <button class="btn-next" onclick="goToPage('page-day-4')">Next day →</button>
+    </div>
+  </div>
+</section>
+
+<!-- DAY 4 — Friday -->
+<section class="page day-page" id="page-day-4">
+  <div class="day-layout">
+    <div class="day-sidebar">
+      <div class="day-num">04</div>
+      <div class="day-label">Day four</div>
+      <div class="day-name">Friday</div>
+    </div>
+    <div class="day-content">
+      <p class="thought-label">A thought from Friday</p>
+      <h3>I started<br>building this for you.</h3>
+      <div class="divider-rose"></div>
+      <div class="day-text">
+        <span class="eng">I collect little things throughout the day — stories, observations, small wonders — and in my head, I'm always telling them to you first. You are who I want to share the world with.</span>
+        <span class="nep">Puja theyo — office jana partheyo tara wastai garina. Puja maa gaya, office kam gareya. Birthday theyo — cake khaya. Ani tya ni msg garira theya — "aja chai fakauxu" vanni thyo. Jasari vaya ni hai, try garira theya… ani yesto garxu vaneyra socheya — 1st day of making this. Don't know how long it will take.<br><br> Hai ani paxadi bata yeuta leya ayra handeyo — bike ko side maa kei vaya na, aulaa maa chai haneyo. Mero mood lastai down theyo timi na boleyra dikka thyo. Kei na vani hideya. Agadi ayara karauxa — rish maa pareyo. Maileya vani na ramro sa vani karai. Ani testai mood leyra aya ghar. Puja maa basi beluka, dekhi GPT sa help lidai banauna thaleya. Tyo din ni 12 bajeya sutyea.</span>
+        <span class="sign">— Dada</span>
+      </div>
+      <button class="btn-next" onclick="goToPage('page-day-5')">Next day →</button>
+    </div>
+  </div>
+</section>
+
+<!-- DAY 5 — Saturday -->
+<section class="page day-page" id="page-day-5">
+  <div class="day-layout">
+    <div class="day-sidebar">
+      <div class="day-num">05</div>
+      <div class="day-label">Day five</div>
+      <div class="day-name">Saturday</div>
+    </div>
+    <div class="day-content">
+      <p class="thought-label">A thought from Saturday</p>
+      <h3>Saturday feels like relief —<br>but you feel like home.</h3>
+      <div class="divider-rose"></div>
+      <div class="day-text">
+        <span class="eng">You exist — warm and real and entirely yourself. That's better than any weekend. That's the best thing I know.</span>
+        <span class="nep">Sanibar ayo — beluka dekhi banauna thali. Ya sa pugeya, majja leya hai. Banaudai theyo — ani tyo no wala chai man leya lekhnai deya na, aja sakxu ma theya.<br><br>"Jam, masu poal" vanyo — man na vaya ni, la la vaneya ni lagvag. Gaya, kin mel gareya, benap bata farkieya. Suru gareya — uncle sa kura gari, yesto yesto timro ni kura gari. Ani sakki sakeya theyo — "Ava ta mani halceyu" vaneyra. K lah — sakeya na.<br><br>Beluka i felt so bad. Dherai din vayesakya theyo na boleya — malai dikkai lagna thali. Sacchi kei nei vaneyra. Ani tei ni hijo msg agri 10 bajeya, adheyro mukh leryra suteya — bina meeting theyo.</span>
+        <span class="sign">— Dada</span>
+      </div>
+      <button class="btn-next" onclick="goToPage('page-day-6')">Next day →</button>
+    </div>
+  </div>
+</section>
+
+<!-- DAY 6 — Sunday -->
+<section class="page day-page" id="page-day-6">
+  <div class="day-layout">
+    <div class="day-sidebar">
+      <div class="day-num">06</div>
+      <div class="day-label">Day six</div>
+      <div class="day-name">Sunday</div>
+    </div>
+    <div class="day-content">
+      <p class="thought-label">A thought from Sunday</p>
+      <h3>The last day — and still,<br>only you.</h3>
+      <div class="divider-rose"></div>
+      <div class="day-text">
+        <span class="eng">I want to sit in the quiet and think about everything you are — and everything I hope we still could be. You are my everything. Always.</span>
+        <span class="nep">Lah — aja last . Deusai pathauxu socheya theya tara i felt ignored. Man nei khinna vayo — full of energy on morning but no energy jastai vayo. Meeting basye. Ani aja pathauxu — j vaya ni hos. I must accept this fate lageyo. If you genuinely don't like me, lets things get apart lageyo.<br><br>Ani dherai garo man leya — yo sabhai banaudai xu. Mero sabahi thok timi nei xau. Pahila dekhi nei aru banaunu nei xina — maiali timi vaya pugxa. Timi nei ta xau. Yeuta — timi ni janxu jasto vanxau na — jau na. Sorry mero payro ful.<br><br>I love you. I'll always love you. You will always be valued in my life. I promise not to let you go until the end of time. Timi ni let go na garnu hola — maya lagxa. Timi bacchai lagxa tara ma baccha xu, kaslai k tha hai. Man khinna hunca na — bola.<br><br>Lets not separate our ways. Beya garnu parxa — 5 barsha. Tha xa Spotify liya ni maileya — yaaaa…<br><br>At last — I am really sorry for everything. Timi na bolda ta mero brain ko adha part nei chaldaina. Mind dull hunnxa. Hera na — kam garnu man xaina. Ava yo banayra garxu. Garxu hola — garnu parxa hola hai.<br><br>I will support you in every phase. Please forgive this person who makes you angry. Ava no nai ho vani ni thik xa — tyo no thicni bitikai ya sa audai audaina. Will always make sure not to trouble you. I don't want a toxic relationship — I want a happy one.<br><br>Just bujnu — afhno thau maa yo thau maa yo garda thik hunxu. There is someone who thinks of you — ramro lagxa hola vaneyra hai. Please, please — I want to be with you for every phase of my life. I want your support. Please.<br><br>I want you — your soul — to be with me forever. K vannu — vanna ta kati… maybe fir kabhi. 🌹</span>
+        <span class="sign">— Dada, always 🌹</span>
+      </div>
+      <button class="btn-next" onclick="goToPage('page-picture-sorry')">One more thing →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- PICTURE SORRY                          -->
+<!-- ══════════════════════════════════════ -->
+<section class="page" id="page-picture-sorry">
+  <div class="pic-sorry-inner">
+    <p class="eyebrow">And one more time</p>
+    <h2>I am truly,<br>deeply sorry.</h2>
+    <p class="subtitle">These are the moments I keep returning to. The ones that remind me exactly what I had — and how carefully I should have held it.</p>
+
+    <div class="photo-grid-single">
+      <!-- Drop your photos as images/sorry-1.jpg etc -->
+      <div class="photo-slot">
+        <img src="images/sorry-1.jpeg" onerror="this.style.display='none'" alt="Memory">
+        <div class="slot-fallback">🌸<div class="slot-label">sorry-1.jpg</div></div>
+      </div>
+      <div class="photo-slot">
+        <img src="images/sorry-2.jpeg" onerror="this.style.display='none'" alt="Memory">
+        <div class="slot-fallback">🌸<div class="slot-label">sorry-2.jpg</div></div>
+      </div>
+      <div class="photo-slot">
+        <img src="images/sorry-3.jpeg" onerror="this.style.display='none'" alt="Memory">
+        <div class="slot-fallback">🌸<div class="slot-label">sorry-3.jpg</div></div>
+      </div>
+    </div>
+
+    <button class="btn-next" onclick="goToPage('page-album')">Our memories →</button>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════ -->
+<!-- ALBUM                                  -->
+<!-- ══════════════════════════════════════ -->
+<section class="page" id="page-album">
+  <div class="album-inner">
+    <div class="album-header">
+      <p class="eyebrow">Our story</p>
+      <h2>A little album of<br><em>beautiful moments</em></h2>
+      <p>Every one of these is a reason.</p>
+    </div>
+
+    <div class="album-grid">
+      <!-- Drop your photos as images/memory-1.jpg etc -->
+      <div class="album-photo tall">
+        <img src="images/sorry-1.jpeg" onerror="this.style.display='none'" alt="Memory 1">
+        <div class="inner"><div class="mem-icon">📸</div><div class="mem-label">Memory 1</div></div>
+      </div>
+      <div class="album-photo">
+        <img src="images/sorry-1.jpeg" onerror="this.style.display='none'" alt="Memory 2">
+        <div class="inner"><div class="mem-icon">🌹</div><div class="mem-label">Memory 2</div></div>
+      </div>
+      <div class="album-photo">
+        <img src="images/sorry-2.jpeg" onerror="this.style.display='none'" alt="Memory 3">
+        <div class="inner"><div class="mem-icon">✨</div><div class="mem-label">Memory 3</div></div>
+      </div>
+      <div class="album-photo wide">
+        <img src="images/sorry-3.jpeg" onerror="this.style.display='none'" alt="Memory 4">
+        <div class="inner"><div class="mem-icon">💌</div><div class="mem-label">Memory 4</div></div>
+      </div>
+      <div class="album-photo">
+        <img src="images/sorry-5.jpeg" onerror="this.style.display='none'" alt="Memory 5">
+        <div class="inner"><div class="mem-icon">🕯️</div><div class="mem-label">Memory 5</div></div>
+      </div>
+      <div class="album-photo">
+        <img src="images/sorry-6.jpeg" onerror="this.style.display='none'" alt="Memory 6">
+        <div class="inner"><div class="mem-icon">🌙</div><div class="mem-label">Memory 6</div></div>
+      </div>
+    </div>
+
+    <p class="album-caption">"These aren't just photographs. They are proof that what we had was real — and worth every effort to protect."</p>
+
+    <div class="album-final">
+      <div class="rose-row">🌹 🌸 🌹</div>
+      <h3>You are <em>worth</em><br>every word of this.</h3>
+
+      <div class="final-letter">
+        <span class="final-open-quote">"</span>
+
+        <p class="final-line">I will make sure to be the boy you want me to be.</p>
+        <p class="final-line">I will make sure to treat you right.</p>
+        <p class="final-line">I will not change. I will talk to you. <span class="final-highlight">I will be your good boy.</span></p>
+
+        <div class="final-divider">✦ ✦ ✦</div>
+
+        <p class="final-nep">
+          I am sorry mero ful — na rishau. Rishaunu hunna. Tha xa rishayo, ghost auxa — tara please.<br><br>
+          I want a sweet lil girl just like you — <span class="final-highlight">from you</span> — so please. I am sorry from the bottom of my heart. I am sorry for making you hurt.<br><br>
+          Will find ways to make our conversation good and best. I am sorry. <span class="final-highlight">I love you.</span>
+        </p>
+
+        <div class="final-divider">🌸 🌸 🌸</div>
+
+        <p class="final-nep">
+          Ma ava bata yesto gardinaa — jid : j vanxau tei manxu. Id magxau — tyo ni dinxu. Tara timro ni chainxa.<br><br>
+          Phone ta sadhai linxau dinxu. Photo halda evil eye halxu. Sadhai rishaunna. Thulo sor gardina. Jitna khojdina.<br><br>
+          Timi sa rishako bela ta <span class="final-highlight">boli halxu</span> — man kamalo xa timro jasto xina. Ignoring — sorry galti dekhako haina hai express gareya .<br><br>
+          <span class="final-highlight">Mero sabhai thok — I am sorry. I love you.</span>
+        </p>
+
+        <div class="final-divider">✦ ✦ ✦</div>
+
+        <p class="final-hope">
+          Hope yo message herya si — <em>boli sinsa hola.</em>
+        </p>
+
+        <p class="final-promise">
+          I love you.<br>
+          Will always love you.<br>
+          And promise to be with you — always. 🌹
+        </p>
+
+        <span class="final-close-quote">"</span>
+        <span class="final-signature">Dada 🌹</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+const SUPA_URL = 'https://vwidzsjzenmynkvwlzuq.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aWR6c2p6ZW5teW5rdndsenVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2MjgxOTIsImV4cCI6MjA5ODIwNDE5Mn0.9gbkHAJOUa_8rayxHMnU_8jn5RQTXEK5RPARerbdYN0';
+
+async function logToSupabase(choice) {
+  const ua = navigator.userAgent;
+  let os = 'Unknown';
+  if (/Windows NT 10/.test(ua)) os = 'Windows 10';
+  else if (/Windows/.test(ua)) os = 'Windows';
+  else if (/Mac OS X/.test(ua)) os = 'macOS';
+  else if (/iPhone/.test(ua)) os = 'iOS (iPhone)';
+  else if (/iPad/.test(ua)) os = 'iOS (iPad)';
+  else if (/Android/.test(ua)) os = 'Android';
+  else if (/Linux/.test(ua)) os = 'Linux';
+  let browser = 'Unknown';
+  if (/Edg\//.test(ua)) browser = 'Microsoft Edge';
+  else if (/OPR\//.test(ua)) browser = 'Opera';
+  else if (/Chrome\//.test(ua)) browser = 'Chrome';
+  else if (/Firefox\//.test(ua)) browser = 'Firefox';
+  else if (/Safari\//.test(ua)) browser = 'Safari';
+  const isMobile = /Mobi|Android|iPhone|iPad/.test(ua);
+  const device = /iPad|Tablet/.test(ua) ? 'Tablet' : isMobile ? 'Mobile' : 'Desktop';
+  try {
+    await fetch(`${SUPA_URL}/rest/v1/responses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ choice, browser, os, device, screen: `${screen.width}×${screen.height}`, language: navigator.language || 'Unknown', timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unknown', timestamp: new Date().toISOString() })
+    });
+  } catch(e) {}
+}
+
+const LOCK_KEY = 'confession_locked_v1';
+let currentPage = 'page-confession';
+const YES_FLOW = ['page-sorry','page-day-1','page-day-2','page-day-3','page-day-4','page-day-5','page-day-6','page-picture-sorry','page-album'];
+
+(function init() {
+  const saved = localStorage.getItem(LOCK_KEY);
+  if (saved === 'no') { showPage('page-locked'); return; }
+  if (saved === 'yes') { showPage('page-sorry'); showProgress(); return; }
+  showPage('page-confession');
+  spawnPetals();
+})();
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('active'); currentPage = id; }
+  updateDots(); window.scrollTo(0, 0);
+}
+function goToPage(id) { showPage(id); if (id !== 'page-confession' && id !== 'page-locked') showProgress(); }
+function showProgress() { document.getElementById('progress').classList.remove('hidden'); }
+function updateDots() {
+  const idx = YES_FLOW.indexOf(currentPage);
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+}
+function jumpTo(i) { if (YES_FLOW[i]) goToPage(YES_FLOW[i]); }
+
+async function handleYes() {
+  localStorage.setItem(LOCK_KEY, 'yes');
+  disableNo();
+  await logToSupabase('YES ♥');
+  document.getElementById('petals').innerHTML = '';
+  goToPage('page-sorry'); showProgress(); burstPetals();
+}
+async function handleNo() {
+  if (localStorage.getItem(LOCK_KEY)) return;
+  localStorage.setItem(LOCK_KEY, 'no');
+  disableNo();
+  await logToSupabase('NO');
+  showPage('page-locked');
+}
+function disableNo() { const b = document.getElementById('btn-no'); if (b) { b.disabled = true; b.style.display = 'none'; } }
+
+const PL = ['🌸','🌹','✿','❀','🌷','❁'];
+function spawnPetals() {
+  const c = document.getElementById('petals'); c.innerHTML = '';
+  for (let i = 0; i < 18; i++) { const p = document.createElement('div'); p.className = 'petal'; p.textContent = PL[Math.floor(Math.random()*PL.length)]; p.style.left=(Math.random()*100)+'%'; p.style.animationDuration=(8+Math.random()*10)+'s'; p.style.animationDelay=(Math.random()*12)+'s'; p.style.fontSize=(14+Math.random()*18)+'px'; c.appendChild(p); }
+}
+function burstPetals() {
+  const c = document.getElementById('petals'); c.innerHTML = '';
+  for (let i = 0; i < 30; i++) { const p = document.createElement('div'); p.className = 'petal'; p.textContent = PL[Math.floor(Math.random()*PL.length)]; p.style.left=(Math.random()*100)+'%'; p.style.animationDuration=(4+Math.random()*6)+'s'; p.style.animationDelay=(Math.random()*3)+'s'; p.style.fontSize=(16+Math.random()*20)+'px'; c.appendChild(p); }
+  setTimeout(() => { c.innerHTML = ''; }, 9000);
+}
+</script>
+</body>
+</html>
